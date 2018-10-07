@@ -5,18 +5,47 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {}
+
+    this.playerMag = 1
+    this.iaMag = 1
   }
+  play(choicePlayer) {
+    let choiceIa = iaChoice()
+
+    if (choicePlayer === 'shot') {
+      if (this.playerMag === 0) choicePlayer = 'shot-blanck'
+      else this.playerMag--
+    }
+    if (choiceIa === 'shot') {
+      if (this.iaMag === 0) choiceIa = 'shot-blanck'
+      else this.iaMag--
+    }
+
+    if (choicePlayer === 'reload') this.playerMag++
+    if (choiceIa === 'reload') this.iaMag++
+
+    this.setState({
+      choicePlayer,
+      choiceIa,
+      winner: defineWinner(
+        {
+          choice: choicePlayer,
+          mag: this.playerMag,
+        },
+        {
+          choice: choiceIa,
+          mag: this.iaMag,
+        }
+      ),
+    })
+  }
+
   render() {
     return (
       <div className="App">
         <button
           onClick={() => {
-            const data = play('shot')
-            this.setState({
-              playerChoice: 'shot',
-              iaChoice: data.iaChoice,
-              winner: data.winner,
-            })
+            this.play('shot')
           }}
         >
           Shot
@@ -24,12 +53,7 @@ class App extends Component {
 
         <button
           onClick={() => {
-            const data = play('parry')
-            this.setState({
-              playerChoice: 'parry',
-              iaChoice: data.iaChoice,
-              winner: data.winner,
-            })
+            this.play('parry')
           }}
         >
           Parry
@@ -37,20 +61,15 @@ class App extends Component {
 
         <button
           onClick={() => {
-            const data = play('reload')
-            this.setState({
-              playerChoice: 'reload',
-              iaChoice: data.iaChoice,
-              winner: data.winner,
-            })
+            this.play('reload')
           }}
         >
           Reload
         </button>
 
-        <div>Choice player: {this.state.playerChoice}</div>
+        <div>Choice player: {this.state.choicePlayer}</div>
 
-        <div>Choice IA: {this.state.iaChoice}</div>
+        <div>Choice IA: {this.state.choiceIa}</div>
 
         <div>Winner: {this.state.winner}</div>
       </div>
@@ -59,6 +78,8 @@ class App extends Component {
 }
 
 const iaChoice = () => {
+  // please enter probabilities
+  // some of choices probabilities must be 1
   const choices = [
     {
       name: 'shot',
@@ -92,32 +113,36 @@ const defineRanges = (choices) => {
   })
 }
 
-const play = (choicePlayer1) => {
-  const choicePlayer2 = iaChoice()
-  return {
-    iaChoice: choicePlayer2,
-    winner: showWinner(choicePlayer1, choicePlayer2),
-  }
-}
-
-const showWinner = (choicePlayer1, choicePlayer2) => {
-  if (choicePlayer1 === 'shot') {
-    if (choicePlayer2 === 'shot' || choicePlayer2 === 'parry') {
+const defineWinner = (player, ia) => {
+  if (player.choice === 'shot') {
+    if (ia.choice === 'shot' || ia.choice === 'parry') {
       return 'match null'
     }
-    //choicePlayer2 === 'reload'
+    //ia.choice === 'reload'|| ia.choice === "shot-blanck"
     return 'YOU WIN'
   }
 
-  if (choicePlayer1 === 'parry') {
+  if (player.choice === 'shot-blanck') {
+    if (ia.choice === 'shot') {
+      return 'YOU LOOSE :('
+    }
+    //ia.choice === 'reload'|| ia.choice === 'parry' || ia.choice === "shot-blanck"
     return 'match null'
   }
 
-  //choicePlayer1 === 'reload'
-  if (choicePlayer2 === 'reload' || choicePlayer2 === 'parry') {
+  if (player.choice === 'parry') {
     return 'match null'
   }
-  //choicePlayer2 === 'shot'
+
+  //player.choice === 'reload'
+  if (
+    ia.choice === 'reload' ||
+    ia.choice === 'parry' ||
+    ia.choice === 'shot-blanck'
+  ) {
+    return 'match null'
+  }
+  //ia.choice === 'shot'
   return 'YOU LOOSE :('
 }
 
